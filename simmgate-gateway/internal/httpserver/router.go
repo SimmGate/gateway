@@ -12,27 +12,22 @@ import (
 	"simmgate-gateway/internal/middleware"
 )
 
-func SetupRouter(r *chi.Mux, baseLogger *zap.Logger) {
-
-	//base logger
+func SetupRouter(r *chi.Mux, baseLogger *zap.Logger, chatHandler *handlers.ChatHandler) {
+	// base middleware
 	r.Use(chimw.RequestID)
 	r.Use(chimw.RealIP)
-
-	//logging context
 
 	r.Use(middleware.LoggingContext(baseLogger))
 	r.Use(middleware.Recoverer())               // panic recovery
 	r.Use(middleware.Timeout(15 * time.Second)) // request timeout
 	r.Use(middleware.MaxBodySize(512 * 1024))   // 512 KB max body
 
-	//routes
-
+	// routes
 	r.Route("/v1", func(r chi.Router) {
-		r.Post("/chat/completions", handlers.ChatCompletion)
+		r.Post("/chat/completions", chatHandler.ChatCompletion)
 	})
 
-	//health check
-
+	// health check
 	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("ok"))
