@@ -9,10 +9,14 @@ import (
 	"go.uber.org/zap"
 
 	"simmgate-gateway/internal/handlers"
+	"simmgate-gateway/internal/metrics"
 	"simmgate-gateway/internal/middleware"
 )
 
 func SetupRouter(r *chi.Mux, baseLogger *zap.Logger, chatHandler *handlers.ChatHandler) {
+
+	r.Use(metrics.Middleware)
+
 	// base middleware
 	r.Use(chimw.RequestID)
 	r.Use(chimw.RealIP)
@@ -32,4 +36,6 @@ func SetupRouter(r *chi.Mux, baseLogger *zap.Logger, chatHandler *handlers.ChatH
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("ok"))
 	})
+
+	r.Handle("/metrics", metrics.Handler())
 }

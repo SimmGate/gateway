@@ -16,6 +16,7 @@ import (
 	"simmgate-gateway/internal/cache"
 	"simmgate-gateway/internal/handlers"
 	"simmgate-gateway/internal/httpserver"
+	"simmgate-gateway/internal/metrics"
 	"simmgate-gateway/pkg/logging/logging"
 )
 
@@ -45,6 +46,9 @@ func run() error {
 	// ----- Logger -----
 	logger := logging.DefaultLogger()
 	defer logger.Sync()
+
+	// ----- Metrics -----
+	metrics.Register()
 
 	// ----- Config -----
 	cfg := LoadConfig()
@@ -80,6 +84,7 @@ func run() error {
 		Prefix:  "simmgate",
 	}
 	exactCache := cache.NewExactCache(cacheCfg, redisClient)
+	exactCache = cache.NewLoggingExactCache(exactCache)
 
 	// ----- Handlers -----
 	chatHandler := handlers.NewChatHandler(
