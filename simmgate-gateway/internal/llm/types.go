@@ -88,6 +88,6 @@ type StreamResult struct {
 }
 
 type Client interface {
-	ChatCompletion(ctx context.Context, req *ChatRequest) (ChatResponse, error)
+	ChatCompletion(ctx context.Context, req *ChatRequest) (*ChatResponse, error)
 	ChatCompletionStream(ctx context.Context, req *ChatRequest) (<-chan StreamResult, error)
 }
