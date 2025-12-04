@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -16,6 +17,7 @@ import (
 	"simmgate-gateway/internal/cache"
 	"simmgate-gateway/internal/handlers"
 	"simmgate-gateway/internal/httpserver"
+	"simmgate-gateway/internal/llm"
 	"simmgate-gateway/internal/metrics"
 	"simmgate-gateway/pkg/logging/logging"
 )
@@ -25,6 +27,8 @@ type Config struct {
 	CacheBackend string // "memory" or "redis"
 	VersionID    string
 	RedisAddr    string
+	LLMBaseURL   string
+	LLMAPIKey    string
 }
 
 func LoadConfig() Config {
@@ -33,6 +37,8 @@ func LoadConfig() Config {
 		CacheBackend: getenv("CACHE_BACKEND", "memory"),
 		VersionID:    getenv("GATEWAY_VERSION", "v1"),
 		RedisAddr:    getenv("REDIS_ADDR", "127.0.0.1:6379"),
+		LLMBaseURL:   getenv("LLM_BASE_URL", "https://api.openai.com"),
+		LLMAPIKey:    os.Getenv("LLM_API_KEY"),
 	}
 }
 
@@ -58,6 +64,7 @@ func run() error {
 		zap.String("cache_backend", cfg.CacheBackend),
 		zap.String("version_id", cfg.VersionID),
 		zap.String("redis_addr", cfg.RedisAddr),
+		zap.String("llm_base_url", cfg.LLMBaseURL),
 	)
 
 	// ----- Redis client (only if needed) -----
@@ -86,11 +93,28 @@ func run() error {
 	exactCache := cache.NewExactCache(cacheCfg, redisClient)
 	exactCache = cache.NewLoggingExactCache(exactCache)
 
+	// ----- LLM client -----
+	if cfg.LLMAPIKey == "" {
+		return fmt.Errorf("LLM_API_KEY is required")
+	}
+
+	llmClient, err := llm.NewClient(llm.Config{
+		BaseURL: cfg.LLMBaseURL,
+		APIKey:  cfg.LLMAPIKey,
+	}, logger)
+	if err != nil {
+		return err
+	}
+	if closer, ok := llmClient.(interface{ Close() error }); ok {
+		defer closer.Close()
+	}
+
 	// ----- Handlers -----
 	chatHandler := handlers.NewChatHandler(
 		exactCache,
 		cacheCfg.TTL,
 		cfg.VersionID,
+		llmClient,
 	)
 
 	// ----- Router + middleware -----

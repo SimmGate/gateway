@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"strings"
 
-	"simmgate-gateway/pkg/types"
+	"simmgate-gateway/internal/llm"
 )
 
 // BuildExactCacheKeyFromChatRequest builds an ExactCacheKey from:
@@ -17,7 +17,7 @@ import (
 // It normalizes the request into a stable string, hashes it with SHA-256,
 // and fills the ExactCacheKey struct.
 func BuildExactCacheKeyFromChatRequest(
-	req types.ChatRequest,
+	req llm.ChatRequest,
 	userID string,
 	versionID string,
 ) (ExactCacheKey, error) {

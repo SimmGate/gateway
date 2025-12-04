@@ -2,6 +2,7 @@ package httpserver
 
 import (
 	"net/http"
+	"net/http/pprof"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -38,4 +39,24 @@ func SetupRouter(r *chi.Mux, baseLogger *zap.Logger, chatHandler *handlers.ChatH
 	})
 
 	r.Handle("/metrics", metrics.Handler())
+
+	registerPprof(r)
+}
+
+func registerPprof(r chi.Router) {
+	r.Route("/debug/pprof", func(r chi.Router) {
+		r.Get("/", http.HandlerFunc(pprof.Index))
+		r.Get("/cmdline", http.HandlerFunc(pprof.Cmdline))
+		r.Get("/profile", http.HandlerFunc(pprof.Profile))
+		r.Get("/symbol", http.HandlerFunc(pprof.Symbol))
+		r.Post("/symbol", http.HandlerFunc(pprof.Symbol))
+		r.Get("/trace", http.HandlerFunc(pprof.Trace))
+
+		r.Handle("/allocs", pprof.Handler("allocs"))
+		r.Handle("/block", pprof.Handler("block"))
+		r.Handle("/goroutine", pprof.Handler("goroutine"))
+		r.Handle("/heap", pprof.Handler("heap"))
+		r.Handle("/mutex", pprof.Handler("mutex"))
+		r.Handle("/threadcreate", pprof.Handler("threadcreate"))
+	})
 }
