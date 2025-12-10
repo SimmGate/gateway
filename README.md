@@ -1,4 +1,4 @@
-simmgate-gateway
+**Simmgate-gateway**
 
 SimmGate Gateway is a high-performance, production-grade Go service that proxies LLM API requests, adds intelligent caching, supports streaming responses, and exposes profiling/metrics for observability.
 
