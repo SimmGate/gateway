@@ -10,7 +10,7 @@ import (
 )
 
 // BuildExactCacheKeyFromChatRequest builds an ExactCacheKey from:
-//   - the ChatRequest (for now; later your full ChatCompletionRequest),
+//   - the ChatRequest (for now; later full ChatCompletionRequest),
 //   - userID (cache scoping),
 //   - versionID (gateway version for invalidation).
 //
